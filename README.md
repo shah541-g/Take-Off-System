@@ -42,7 +42,7 @@ A production-ready microservice for managing employee time-off requests with ent
 
 ### Planning & Design Documents
 
-1. **[TRD (Technical Requirements Document)](docs/TRD.md)**
+1. **[TRD (Technical Requirements Document)](docs/TRD.pdf)**
    - Problem statement and challenges
    - System architecture and data models
    - Proposed solutions with alternatives considered
@@ -50,14 +50,14 @@ A production-ready microservice for managing employee time-off requests with ent
    - Error handling and resilience strategies
    - Success criteria
 
-2. **[Test Strategy](docs/TEST_STRATEGY.md)**
+2. **[Test Strategy](docs/TEST_STRATEGY.pdf)**
    - 100+ comprehensive test cases
    - Unit, integration, and E2E tests
    - Mock HCM behaviors
    - Test data fixtures
    - Coverage goals (>80%)
 
-3. **[Implementation Guide](docs/IMPLEMENTATION_GUIDE.md)**
+3. **[Implementation Guide](docs/IMPLEMENTATION_GUIDE.pdf)**
    - Project structure
    - NestJS module architecture
    - Service responsibilities
@@ -65,7 +65,7 @@ A production-ready microservice for managing employee time-off requests with ent
    - Configuration management
    - Development workflow
 
-4. **[Mock HCM Specification](docs/MOCK_HCM_SPEC.md)**
+4. **[Mock HCM Specification](docs/MOCK_HCM_SPEC.pdf)**
    - Mock HCM API endpoints
    - Configurable behaviors (timeout, drift, circuit breaker, etc.)
    - Admin commands for testing
@@ -223,7 +223,7 @@ Audit Log
 - `GET /api/v1/admin/sync/{syncId}` - Check sync status
 - `POST /api/v1/admin/detect-drift` - Detect balance drift
 
-See [TRD.md](docs/TRD.md#6-api-specification) for full API specification.
+See [TRD.pdf](docs/TRD.pdf) for full API specification.
 
 ---
 
@@ -275,7 +275,7 @@ See [TRD.md](docs/TRD.md#6-api-specification) for full API specification.
 | Concurrent approvals | 409 Conflict, optimistic lock failure |
 | Database transaction failure | Rollback, request stays PENDING |
 
-See [TRD.md](docs/TRD.md#8-error-handling--resilience) for detailed error handling strategy.
+See [TRD.pdf](docs/TRD.pdf) for detailed error handling strategy.
 
 ---
 
@@ -301,7 +301,7 @@ The mock HCM server supports 7 configurable behaviors:
 6. **INVALID_DIMENSION**: Return 404 for specific combos
 7. **INSUFFICIENT_BALANCE**: Return 403 for over-requests
 
-See [TEST_STRATEGY.md](docs/TEST_STRATEGY.md) for all 100+ test cases.
+See [TEST_STRATEGY.pdf](docs/TEST_STRATEGY.pdf) for all 100+ test cases.
 
 ---
 
@@ -485,6 +485,6 @@ MIT
 
 ---
 
-**Last Updated**: April 24, 2026
+**Last Updated**: April 26, 2026
 
 For detailed information, see the documentation in `/docs` folder.
