@@ -1,0 +1,1362 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Time-Off Control Room</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #07111f;
+        --bg-soft: #0d1729;
+        --surface: rgba(15, 23, 42, 0.78);
+        --surface-strong: #111c31;
+        --panel: rgba(255, 255, 255, 0.05);
+        --line: rgba(148, 163, 184, 0.18);
+        --ink: #e5eefb;
+        --muted: #9db0cb;
+        --accent: #6ee7b7;
+        --accent-strong: #10b981;
+        --accent-alt: #7dd3fc;
+        --warn: #fb923c;
+        --ok: #4ade80;
+        --err: #f87171;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Space Grotesk", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 18%, rgba(125, 211, 252, 0.18), transparent 22%),
+          radial-gradient(circle at 85% 10%, rgba(110, 231, 183, 0.16), transparent 20%),
+          radial-gradient(circle at 70% 85%, rgba(251, 146, 60, 0.12), transparent 22%),
+          linear-gradient(180deg, #06101d 0%, #0b1627 48%, #07111f 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3), transparent 85%);
+        pointer-events: none;
+      }
+
+      .shell {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 20px;
+        padding: 28px;
+        border: 1px solid rgba(110, 231, 183, 0.18);
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(17, 28, 49, 0.92), rgba(9, 16, 29, 0.85));
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 7px 12px;
+        border: 1px solid rgba(125, 211, 252, 0.2);
+        border-radius: 999px;
+        background: rgba(125, 211, 252, 0.08);
+        color: var(--accent-alt);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.74rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 4rem);
+        line-height: 0.95;
+        max-width: 12ch;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 72ch;
+        color: var(--muted);
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .top-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .config-card,
+      .stats-card,
+      .panel,
+      .console {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: var(--surface);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+      }
+
+      .config-card,
+      .stats-card {
+        padding: 18px;
+      }
+
+      .section-title {
+        margin: 0 0 10px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .config-row,
+      .row,
+      .stats-grid,
+      .feature-grid,
+      .split-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .config-row {
+        grid-template-columns: 1fr 1fr auto;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .feature-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 18px;
+      }
+
+      .split-grid {
+        grid-template-columns: 1.15fr 0.85fr;
+        margin-top: 18px;
+      }
+
+      .card-column {
+        display: grid;
+        gap: 14px;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .panel h2,
+      .panel h3,
+      .stats-card h3 {
+        margin: 0;
+      }
+
+      .panel h2 {
+        font-size: 1.05rem;
+      }
+
+      .panel p,
+      .stats-card p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .pill,
+      .route-pill,
+      .status-pill,
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.04);
+        padding: 6px 10px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.72rem;
+        color: var(--ink);
+      }
+
+      .route-pill {
+        color: var(--accent-alt);
+        border-color: rgba(125, 211, 252, 0.22);
+        background: rgba(125, 211, 252, 0.08);
+      }
+
+      .status-pill.ok {
+        color: var(--ok);
+        border-color: rgba(74, 222, 128, 0.24);
+        background: rgba(74, 222, 128, 0.08);
+      }
+
+      .status-pill.warn {
+        color: var(--warn);
+        border-color: rgba(251, 146, 60, 0.22);
+        background: rgba(251, 146, 60, 0.08);
+      }
+
+      .status-pill.err {
+        color: var(--err);
+        border-color: rgba(248, 113, 113, 0.22);
+        background: rgba(248, 113, 113, 0.08);
+      }
+
+      .metric {
+        padding: 14px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .metric .label {
+        color: var(--muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .metric .value {
+        margin-top: 10px;
+        font-size: clamp(1.05rem, 2vw, 1.45rem);
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .metric .value small {
+        font-size: 0.78rem;
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      label {
+        display: block;
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        background: rgba(7, 17, 31, 0.9);
+        color: var(--ink);
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        padding: 11px 12px;
+      }
+
+      textarea {
+        min-height: 128px;
+        resize: vertical;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.84rem;
+        line-height: 1.5;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: #6b7d97;
+      }
+
+      button {
+        padding: 11px 14px;
+        cursor: pointer;
+        font-weight: 700;
+        border-color: rgba(110, 231, 183, 0.28);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(125, 211, 252, 1));
+        color: #04111b;
+        box-shadow: 0 12px 30px rgba(16, 185, 129, 0.18);
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease,
+          opacity 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 36px rgba(16, 185, 129, 0.24);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--ink);
+        box-shadow: none;
+      }
+
+      .btn-secondary:hover {
+        box-shadow: none;
+        border-color: rgba(125, 211, 252, 0.28);
+      }
+
+      .btn-ghost {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--ink);
+        box-shadow: none;
+      }
+
+      .controls,
+      .compact-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .compact-grid.two {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .compact-grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .mini-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .mini-actions > * {
+        flex: 1 1 140px;
+      }
+
+      .divider {
+        height: 1px;
+        margin: 14px 0;
+        background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.22), transparent);
+      }
+
+      .console {
+        margin-top: 18px;
+        overflow: hidden;
+      }
+
+      .console-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(7, 17, 31, 0.84);
+      }
+
+      .console-title {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .console-title strong {
+        font-size: 1rem;
+      }
+
+      .console-title span {
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .console-grid {
+        display: grid;
+        grid-template-columns: 0.92fr 1.08fr;
+        min-height: 420px;
+      }
+
+      .log,
+      .output {
+        padding: 18px;
+      }
+
+      .log {
+        border-right: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .timeline {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+        max-height: 360px;
+        overflow: auto;
+      }
+
+      .entry {
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 17, 31, 0.62);
+      }
+
+      .entry .meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+
+      .entry .message {
+        margin: 0;
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+
+      .entry.ok .message {
+        color: #cffce5;
+      }
+
+      .entry.err .message {
+        color: #ffd0d0;
+      }
+
+      pre {
+        margin: 0;
+        min-height: 360px;
+        max-height: 620px;
+        overflow: auto;
+        padding: 16px;
+        border-radius: 18px;
+        background: #030712;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #d6e4f1;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8rem;
+        line-height: 1.55;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 0.78rem;
+        margin-top: 8px;
+      }
+
+      .error-note {
+        margin-top: 10px;
+        color: #fdba74;
+        font-size: 0.82rem;
+        line-height: 1.5;
+      }
+
+      .inline-note {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+
+      @media (max-width: 1080px) {
+        .top-grid,
+        .split-grid,
+        .console-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .log {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .stats-grid,
+        .feature-grid,
+        .compact-grid.two,
+        .compact-grid.three,
+        .config-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="eyebrow">Time-Off System Frontend</div>
+        <div>
+          <h1>Control the time-off stack from one screen.</h1>
+          <p>
+            This dashboard talks to the main Take-Off service and the mock HCM server side by side.
+            Use it to exercise request flows, inspect health, trigger sync, and inject mock HCM behaviors
+            without leaving the browser.
+          </p>
+        </div>
+
+        <div class="top-grid">
+          <section class="config-card">
+            <div class="section-title">Connection settings</div>
+            <div class="config-row">
+              <div>
+                <label for="takeOffBase">Take-Off base URL</label>
+                <input id="takeOffBase" value="http://localhost:3000" />
+              </div>
+              <div>
+                <label for="mockBase">Mock HCM base URL</label>
+                <input id="mockBase" value="http://localhost:3001" />
+              </div>
+              <div style="display:flex;align-items:end;">
+                <button id="saveSettings" class="btn-secondary" type="button">Save</button>
+              </div>
+            </div>
+            <div class="mini-actions" style="margin-top:12px;">
+              <button id="checkAll" type="button">Refresh Status</button>
+              <button id="clearOutput" class="btn-ghost" type="button">Clear Console</button>
+              <button id="copyOutput" class="btn-ghost" type="button">Copy Response</button>
+            </div>
+            <div class="hint">Defaults are set for local development. You can point both inputs at Docker or deployed URLs.</div>
+          </section>
+
+          <section class="stats-card">
+            <div class="section-title">Live state</div>
+            <div class="stats-grid">
+              <div class="metric">
+                <div class="label">Take-Off</div>
+                <div class="value" id="takeOffMetric">Idle <small>waiting</small></div>
+              </div>
+              <div class="metric">
+                <div class="label">Mock HCM</div>
+                <div class="value" id="mockMetric">Idle <small>waiting</small></div>
+              </div>
+              <div class="metric">
+                <div class="label">Latency</div>
+                <div class="value" id="latencyMetric">-- <small>ms</small></div>
+              </div>
+              <div class="metric">
+                <div class="label">Last action</div>
+                <div class="value" id="actionMetric">None <small>ready</small></div>
+              </div>
+            </div>
+            <div class="pill-row" style="margin-top:12px;">
+              <span class="route-pill">/api/v1/health</span>
+              <span class="route-pill">/api/v1/api/v1/requests</span>
+              <span class="route-pill">/api/v1/api/v1/admin/sync/balances</span>
+              <span class="route-pill">/hcm/admin/state</span>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="split-grid">
+        <div class="card-column">
+          <article class="panel">
+            <div class="section-title">Take-Off operations</div>
+            <h2>Health, balances, requests, and sync</h2>
+            <p>These controls call the main application. Use them to exercise the request lifecycle and validate HCM integration.</p>
+
+            <div class="feature-grid">
+              <div class="panel" style="padding:14px; background:rgba(255,255,255,0.03);">
+                <div class="pill-row" style="margin-bottom:12px;">
+                  <span class="pill">GET</span>
+                  <span class="route-pill">/api/v1/health</span>
+                </div>
+                <button type="button" data-action="takeoff-health">Check Health</button>
+              </div>
+              <div class="panel" style="padding:14px; background:rgba(255,255,255,0.03);">
+                <div class="pill-row" style="margin-bottom:12px;">
+                  <span class="pill">GET</span>
+                  <span class="route-pill">/api/v1/api/v1/balances/:employeeId/:locationId/:leaveType</span>
+                </div>
+                <div class="compact-grid two">
+                  <input id="balanceEmployee" value="EMP001" placeholder="Employee ID" />
+                  <input id="balanceLocation" value="NYC" placeholder="Location ID" />
+                </div>
+                <div class="compact-grid two" style="margin-top:10px;">
+                  <input id="balanceLeave" value="PTO" placeholder="Leave type" />
+                  <input id="balanceYear" value="2026" placeholder="Year" />
+                </div>
+                <button style="margin-top:10px;" type="button" data-action="get-balance">Get Balance</button>
+              </div>
+            </div>
+
+            <div class="feature-grid" style="margin-top:14px;">
+              <div class="panel" style="padding:14px; background:rgba(255,255,255,0.03);">
+                <div class="pill-row" style="margin-bottom:12px;">
+                  <span class="pill">POST</span>
+                  <span class="route-pill">/api/v1/api/v1/requests</span>
+                </div>
+                <textarea id="createBody">{
+  "employeeId": "EMP001",
+  "locationId": "NYC",
+  "leaveType": "PTO",
+  "startDate": "2026-05-01",
+  "endDate": "2026-05-03",
+  "daysRequested": 3
+}</textarea>
+                <button style="margin-top:10px;" type="button" data-action="create-request">Create Request</button>
+              </div>
+              <div class="panel" style="padding:14px; background:rgba(255,255,255,0.03);">
+                <div class="pill-row" style="margin-bottom:12px;">
+                  <span class="pill">PATCH</span>
+                  <span class="route-pill">/api/v1/api/v1/requests/:id/{approve|reject|cancel}</span>
+                </div>
+                <div class="compact-grid two">
+                  <input id="requestId" value="REQ001" placeholder="Request ID" />
+                  <input id="actorId" value="MGR001" placeholder="Approver / employee" />
+                </div>
+                <div class="compact-grid three" style="margin-top:10px;">
+                  <button type="button" data-action="approve-request">Approve</button>
+                  <button type="button" data-action="reject-request" class="btn-secondary">Reject</button>
+                  <button type="button" data-action="cancel-request" class="btn-ghost">Cancel</button>
+                </div>
+                <textarea id="rejectReason" style="margin-top:10px;" placeholder="Reason for reject/cancel">Policy conflict</textarea>
+              </div>
+            </div>
+
+            <div class="feature-grid" style="margin-top:14px;">
+              <div class="panel" style="padding:14px; background:rgba(255,255,255,0.03);">
+                <div class="pill-row" style="margin-bottom:12px;">
+                  <span class="pill">GET</span>
+                  <span class="route-pill">/api/v1/api/v1/requests/employee/:employeeId</span>
+                </div>
+                <div class="compact-grid two">
+                  <input id="employeeRequestsId" value="EMP001" placeholder="Employee ID" />
+                  <input id="employeeRequestsYear" value="2026" placeholder="Year" />
+                </div>
+                <input id="employeeRequestsStatus" style="margin-top:10px;" placeholder="Status filter (optional)" />
+                <button style="margin-top:10px;" type="button" data-action="employee-requests">Load Employee Requests</button>
+              </div>
+              <div class="panel" style="padding:14px; background:rgba(255,255,255,0.03);">
+                <div class="pill-row" style="margin-bottom:12px;">
+                  <span class="pill">POST</span>
+                  <span class="route-pill">/api/v1/api/v1/admin/sync/balances</span>
+                </div>
+                <textarea id="syncBody">{
+  "employees": [
+    {"employeeId": "EMP001", "locationId": "NYC", "leaveType": "PTO"},
+    {"employeeId": "EMP002", "locationId": "SF", "leaveType": "SICK_LEAVE"}
+  ]
+}</textarea>
+                <div class="mini-actions" style="margin-top:10px;">
+                  <button type="button" data-action="sync-balances">Run Sync</button>
+                  <button type="button" data-action="detect-drift" class="btn-secondary">Detect Drift</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="section-title">Custom request console</div>
+            <h2>Drive any endpoint</h2>
+            <p>Use this when you want to hit a route that is not covered by a preset action.</p>
+
+            <div class="compact-grid two">
+              <select id="customTarget">
+                <option value="takeoff">Take-Off service</option>
+                <option value="mock">Mock HCM</option>
+              </select>
+              <select id="customMethod">
+                <option>GET</option>
+                <option>POST</option>
+                <option>PATCH</option>
+                <option>PUT</option>
+                <option>DELETE</option>
+              </select>
+            </div>
+            <input id="customPath" style="margin-top:10px;" value="/api/v1/health" placeholder="/path" />
+            <div class="compact-grid two" style="margin-top:10px;">
+              <div>
+                <label for="customHeaders">Headers (JSON)</label>
+                <textarea id="customHeaders">{
+  "Content-Type": "application/json"
+}</textarea>
+              </div>
+              <div>
+                <label for="customBody">Body (JSON for non-GET)</label>
+                <textarea id="customBody">{
+  "hello": "world"
+}</textarea>
+              </div>
+            </div>
+            <div class="mini-actions" style="margin-top:10px;">
+              <button id="customRun" type="button">Send Request</button>
+              <button id="prefillHealth" class="btn-ghost" type="button">Prefill Health</button>
+              <button id="prefillMockState" class="btn-ghost" type="button">Prefill Mock State</button>
+            </div>
+            <div class="hint">The request target is resolved from the selected base URL and path. JSON parsing errors are surfaced in the console.</div>
+          </article>
+        </div>
+
+        <div class="card-column">
+          <article class="panel">
+            <div class="section-title">Mock HCM control center</div>
+            <h2>Failure injection and state management</h2>
+            <p>Control the mock server from here to simulate downstream failures, drift, and balance changes.</p>
+
+            <div class="compact-grid two">
+              <div>
+                <label for="behaviorSelect">Behavior</label>
+                <select id="behaviorSelect">
+                  <option value="NORMAL">NORMAL</option>
+                  <option value="TIMEOUT">TIMEOUT</option>
+                  <option value="PARTIAL_FAILURE">PARTIAL_FAILURE</option>
+                  <option value="DRIFT">DRIFT</option>
+                  <option value="CIRCUIT_BREAKER">CIRCUIT_BREAKER</option>
+                  <option value="INVALID_DIMENSION">INVALID_DIMENSION</option>
+                  <option value="INSUFFICIENT_BALANCE">INSUFFICIENT_BALANCE</option>
+                </select>
+              </div>
+              <div>
+                <label for="mockEmployeeId">Employee ID</label>
+                <input id="mockEmployeeId" value="emp001" />
+              </div>
+            </div>
+
+            <div class="compact-grid two" style="margin-top:10px;">
+              <div>
+                <label for="mockLocationId">Location ID</label>
+                <input id="mockLocationId" value="NYC" />
+              </div>
+              <div>
+                <label for="mockLeaveType">Leave type</label>
+                <input id="mockLeaveType" value="PTO" />
+              </div>
+            </div>
+
+            <div class="compact-grid two" style="margin-top:10px;">
+              <div>
+                <label for="mockAvailable">Available</label>
+                <input id="mockAvailable" type="number" value="10" />
+              </div>
+              <div>
+                <label for="mockUsed">Used</label>
+                <input id="mockUsed" type="number" value="0" />
+              </div>
+            </div>
+
+            <div class="compact-grid two" style="margin-top:10px;">
+              <div>
+                <label for="mockPending">Pending</label>
+                <input id="mockPending" type="number" value="0" />
+              </div>
+              <div>
+                <label for="mockRequestId">Request ID</label>
+                <input id="mockRequestId" value="REQ001" />
+              </div>
+            </div>
+
+            <div class="mini-actions" style="margin-top:12px;">
+              <button type="button" data-action="mock-set-behavior">Set Behavior</button>
+              <button type="button" data-action="mock-reset-behavior" class="btn-secondary">Reset Behavior</button>
+            </div>
+            <div class="mini-actions" style="margin-top:10px;">
+              <button type="button" data-action="mock-update-balance" class="btn-secondary">Update Balance</button>
+              <button type="button" data-action="mock-reset-all" class="btn-ghost">Reset All Data</button>
+              <button type="button" data-action="mock-health" class="btn-ghost">Mock Health</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="pill-row">
+              <span class="badge">Behavior state</span>
+              <span class="badge" id="behaviorBadge">NORMAL</span>
+            </div>
+            <p id="behaviorSummary">Ready to inject normal responses.</p>
+          </article>
+
+          <article class="panel">
+            <div class="section-title">Preset payloads</div>
+            <h2>Fast-start request templates</h2>
+            <div class="compact-grid two" style="margin-top:12px;">
+              <button type="button" data-template="create">Create request</button>
+              <button type="button" data-template="approve" class="btn-secondary">Approve request</button>
+              <button type="button" data-template="reject" class="btn-secondary">Reject request</button>
+              <button type="button" data-template="sync" class="btn-ghost">Sync balances</button>
+            </div>
+            <div class="hint">Templates update the visible editors so you can run or tweak them before sending.</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="console">
+        <div class="console-head">
+          <div class="console-title">
+            <strong>Response Console</strong>
+            <span>Every action is captured here with status, timing, and parsed JSON.</span>
+          </div>
+          <div class="pill-row">
+            <span class="status-pill ok" id="takeOffStatusPill">Take-Off idle</span>
+            <span class="status-pill ok" id="mockStatusPill">Mock idle</span>
+            <span class="status-pill" id="consoleStatusPill">Ready</span>
+          </div>
+        </div>
+
+        <div class="console-grid">
+          <div class="log">
+            <div class="section-title">Activity</div>
+            <div class="timeline" id="timeline"></div>
+          </div>
+          <div class="output">
+            <div class="section-title">Last response</div>
+            <pre id="responsePanel">Select an action to see a formatted response.</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const STORAGE_KEY = 'time-off-control-room-settings';
+      const el = (id) => document.getElementById(id);
+
+      const state = {
+        lastResponse: '',
+        lastPayload: null,
+        lastAction: 'None',
+        lastLatency: null,
+        takeOffStatus: 'idle',
+        mockStatus: 'idle',
+      };
+
+      const routes = {
+        takeOff: {
+          health: '/api/v1/health',
+          balance: '/api/v1/api/v1/balances',
+          requests: '/api/v1/api/v1/requests',
+          employeeRequests: '/api/v1/api/v1/requests/employee',
+          sync: '/api/v1/api/v1/admin/sync/balances',
+          syncStatus: '/api/v1/api/v1/admin/sync',
+          detectDrift: '/api/v1/api/v1/admin/sync/detect-drift',
+        },
+        mock: {
+          health: '/hcm/admin/health',
+          state: '/hcm/admin/state',
+          setBehavior: '/hcm/admin/set-behavior',
+          resetBehavior: '/hcm/admin/reset-behavior',
+          resetAll: '/hcm/admin/reset-all',
+          updateBalance: '/hcm/admin/update-balance',
+        },
+      };
+
+      function loadSettings() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+          if (saved.takeOffBase) el('takeOffBase').value = saved.takeOffBase;
+          if (saved.mockBase) el('mockBase').value = saved.mockBase;
+        } catch (_) {
+          // Ignore malformed localStorage data.
+        }
+      }
+
+      function saveSettings() {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            takeOffBase: el('takeOffBase').value.trim(),
+            mockBase: el('mockBase').value.trim(),
+          }),
+        );
+      }
+
+      function baseFor(target) {
+        return target === 'mock'
+          ? el('mockBase').value.trim().replace(/\/$/, '')
+          : el('takeOffBase').value.trim().replace(/\/$/, '');
+      }
+
+      function routeUrl(target, path) {
+        const base = baseFor(target);
+        return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+      }
+
+      function pretty(value) {
+        return JSON.stringify(value, null, 2);
+      }
+
+      function updateMetrics() {
+        el('actionMetric').innerHTML = `${state.lastAction} <small>${state.lastLatency == null ? 'ready' : `${state.lastLatency} ms`}</small>`;
+        el('latencyMetric').innerHTML = `${state.lastLatency == null ? '--' : state.lastLatency} <small>ms</small>`;
+        el('takeOffMetric').innerHTML = `${state.takeOffStatus.toUpperCase()} <small>${el('takeOffBase').value.trim()}</small>`;
+        el('mockMetric').innerHTML = `${state.mockStatus.toUpperCase()} <small>${el('mockBase').value.trim()}</small>`;
+        el('takeOffStatusPill').textContent = `Take-Off ${state.takeOffStatus}`;
+        el('mockStatusPill').textContent = `Mock ${state.mockStatus}`;
+        el('consoleStatusPill').textContent = state.lastAction;
+        el('behaviorBadge').textContent = el('behaviorSelect').value;
+      }
+
+      function addEntry(kind, title, detail) {
+        const node = document.createElement('article');
+        node.className = `entry ${kind}`;
+        const time = new Date().toLocaleTimeString();
+        node.innerHTML = `
+          <div class="meta"><span>${title}</span><span>${time}</span></div>
+          <p class="message">${detail}</p>
+        `;
+        const timeline = el('timeline');
+        timeline.prepend(node);
+        while (timeline.children.length > 12) timeline.removeChild(timeline.lastElementChild);
+      }
+
+      function setResponse(payload, actionName, latencyMs, ok = true) {
+        state.lastPayload = payload;
+        state.lastResponse = pretty(payload);
+        state.lastAction = actionName;
+        state.lastLatency = latencyMs;
+        el('responsePanel').textContent = state.lastResponse;
+        el('consoleStatusPill').className = `status-pill ${ok ? 'ok' : 'err'}`;
+        el('consoleStatusPill').textContent = `${actionName} · ${ok ? 'OK' : 'ERR'}`;
+        updateMetrics();
+      }
+
+      function setError(actionName, latencyMs, errorMessage, payload) {
+        const body = payload || { message: errorMessage };
+        setResponse(body, actionName, latencyMs, false);
+      }
+
+      async function sendRequest({ target, method, path, headers = {}, body, timeoutMs = 15000 }) {
+        const started = performance.now();
+        const url = target === 'mock' || target === 'takeoff' ? routeUrl(target, path) : path;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort('Request timed out'), timeoutMs);
+
+        try {
+          const options = {
+            method,
+            headers: { ...headers },
+            signal: controller.signal,
+          };
+
+          if (body !== undefined && body !== null && method !== 'GET') {
+            options.body = typeof body === 'string' ? body : JSON.stringify(body);
+          }
+
+          const response = await fetch(url, options);
+          const raw = await response.text();
+          let parsed = raw;
+          try {
+            parsed = raw ? JSON.parse(raw) : null;
+          } catch (_) {
+            // Keep raw string when response is not JSON.
+          }
+
+          const headersObj = {};
+          for (const [key, value] of response.headers.entries()) {
+            headersObj[key] = value;
+          }
+
+          const latencyMs = Math.round(performance.now() - started);
+          clearTimeout(timer);
+          const payload = {
+            request: { method, url, target },
+            response: {
+              status: response.status,
+              ok: response.ok,
+              headers: headersObj,
+              body: parsed,
+            },
+            timing: { latencyMs },
+          };
+
+          state.takeOffStatus = target === 'takeoff' ? (response.ok ? 'up' : 'degraded') : state.takeOffStatus;
+          state.mockStatus = target === 'mock' ? (response.ok ? 'up' : 'degraded') : state.mockStatus;
+          setResponse(payload, `${method} ${path}`, latencyMs, response.ok);
+          addEntry(response.ok ? 'ok' : 'err', `${method} ${path}`, `${url} returned ${response.status} in ${latencyMs}ms.`);
+          return payload;
+        } catch (error) {
+          clearTimeout(timer);
+          const latencyMs = Math.round(performance.now() - started);
+          const message = error instanceof DOMException && error.name === 'AbortError'
+            ? 'Request timed out'
+            : error instanceof Error
+              ? error.message
+              : 'Unknown network error';
+          setError(`${method} ${path}`, latencyMs, message, {
+            request: { method, url, target },
+            error: message,
+            timing: { latencyMs },
+            hint: 'Verify the target service is running and CORS allows browser requests.',
+          });
+          addEntry('err', `${method} ${path}`, message);
+          if (target === 'takeoff') state.takeOffStatus = 'down';
+          if (target === 'mock') state.mockStatus = 'down';
+          updateMetrics();
+          throw error;
+        }
+      }
+
+      async function runTakeOffHealth() {
+        const result = await sendRequest({ target: 'takeoff', method: 'GET', path: routes.takeOff.health });
+        state.takeOffStatus = result.response.ok ? 'up' : 'degraded';
+        updateMetrics();
+        return result;
+      }
+
+      async function runMockHealth() {
+        const result = await sendRequest({ target: 'mock', method: 'GET', path: routes.mock.health });
+        state.mockStatus = result.response.ok ? 'up' : 'degraded';
+        updateMetrics();
+        return result;
+      }
+
+      function takeOffAction(action) {
+        switch (action) {
+          case 'takeoff-health':
+            return runTakeOffHealth();
+          case 'get-balance': {
+            const employeeId = el('balanceEmployee').value.trim();
+            const locationId = el('balanceLocation').value.trim();
+            const leaveType = el('balanceLeave').value.trim();
+            const year = el('balanceYear').value.trim();
+            const query = year ? `?year=${encodeURIComponent(year)}` : '';
+            return sendRequest({
+              target: 'takeoff',
+              method: 'GET',
+              path: `${routes.takeOff.balance}/${encodeURIComponent(employeeId)}/${encodeURIComponent(locationId)}/${encodeURIComponent(leaveType)}${query}`,
+            });
+          }
+          case 'create-request':
+            return sendRequest({
+              target: 'takeoff',
+              method: 'POST',
+              path: routes.takeOff.requests,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.parse(el('createBody').value),
+            });
+          case 'approve-request':
+            return sendRequest({
+              target: 'takeoff',
+              method: 'PATCH',
+              path: `${routes.takeOff.requests}/${encodeURIComponent(el('requestId').value.trim())}/approve`,
+              headers: { 'Content-Type': 'application/json' },
+              body: { approverId: el('actorId').value.trim() },
+            });
+          case 'reject-request':
+            return sendRequest({
+              target: 'takeoff',
+              method: 'PATCH',
+              path: `${routes.takeOff.requests}/${encodeURIComponent(el('requestId').value.trim())}/reject`,
+              headers: { 'Content-Type': 'application/json' },
+              body: { reason: el('rejectReason').value.trim() || 'Rejected from control room' },
+            });
+          case 'cancel-request':
+            return sendRequest({
+              target: 'takeoff',
+              method: 'PATCH',
+              path: `${routes.takeOff.requests}/${encodeURIComponent(el('requestId').value.trim())}/cancel`,
+              headers: { 'Content-Type': 'application/json' },
+              body: { reason: el('rejectReason').value.trim() || 'Cancelled from control room' },
+            });
+          case 'employee-requests': {
+            const employeeId = el('employeeRequestsId').value.trim();
+            const year = el('employeeRequestsYear').value.trim();
+            const status = el('employeeRequestsStatus').value.trim();
+            const query = new URLSearchParams();
+            if (year) query.set('year', year);
+            if (status) query.set('status', status);
+            const suffix = query.toString() ? `?${query.toString()}` : '';
+            return sendRequest({
+              target: 'takeoff',
+              method: 'GET',
+              path: `${routes.takeOff.employeeRequests}/${encodeURIComponent(employeeId)}${suffix}`,
+            });
+          }
+          case 'sync-balances':
+            return sendRequest({
+              target: 'takeoff',
+              method: 'POST',
+              path: routes.takeOff.sync,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.parse(el('syncBody').value),
+            });
+          case 'detect-drift':
+            return sendRequest({
+              target: 'takeoff',
+              method: 'POST',
+              path: routes.takeOff.detectDrift,
+              headers: { 'Content-Type': 'application/json' },
+              body: [
+                {
+                  employeeId: el('balanceEmployee').value.trim(),
+                  locationId: el('balanceLocation').value.trim(),
+                  leaveType: el('balanceLeave').value.trim(),
+                },
+              ],
+            });
+          default:
+            return null;
+        }
+      }
+
+      function mockAction(action) {
+        switch (action) {
+          case 'mock-health':
+            return runMockHealth();
+          case 'mock-set-behavior': {
+            const behavior = el('behaviorSelect').value;
+            el('behaviorBadge').textContent = behavior;
+            el('behaviorSummary').textContent = `Behavior set to ${behavior}. This will affect balance and request responses.`;
+            return sendRequest({
+              target: 'mock',
+              method: 'POST',
+              path: routes.mock.setBehavior,
+              headers: { 'Content-Type': 'application/json' },
+              body: { behavior },
+            });
+          }
+          case 'mock-reset-behavior':
+            el('behaviorSummary').textContent = 'Behavior reset to NORMAL.';
+            return sendRequest({
+              target: 'mock',
+              method: 'POST',
+              path: routes.mock.resetBehavior,
+            });
+          case 'mock-update-balance':
+            return sendRequest({
+              target: 'mock',
+              method: 'POST',
+              path: routes.mock.updateBalance,
+              headers: { 'Content-Type': 'application/json' },
+              body: {
+                employeeId: el('mockEmployeeId').value.trim(),
+                locationId: el('mockLocationId').value.trim(),
+                leaveType: el('mockLeaveType').value.trim(),
+                available: Number(el('mockAvailable').value),
+                used: Number(el('mockUsed').value),
+                pending: Number(el('mockPending').value),
+              },
+            });
+          case 'mock-reset-all':
+            el('behaviorSummary').textContent = 'Mock data reset to seeded values.';
+            return sendRequest({
+              target: 'mock',
+              method: 'POST',
+              path: routes.mock.resetAll,
+            });
+          case 'mock-state':
+            return sendRequest({
+              target: 'mock',
+              method: 'GET',
+              path: routes.mock.state,
+            });
+          default:
+            return null;
+        }
+      }
+
+      function fillTemplate(name) {
+        const templates = {
+          create: {
+            target: 'takeoff',
+            method: 'POST',
+            path: routes.takeOff.requests,
+            body: {
+              employeeId: 'EMP001',
+              locationId: 'NYC',
+              leaveType: 'PTO',
+              startDate: '2026-05-01',
+              endDate: '2026-05-03',
+              daysRequested: 3,
+            },
+          },
+          approve: {
+            target: 'takeoff',
+            method: 'PATCH',
+            path: `${routes.takeOff.requests}/REQ001/approve`,
+            body: { approverId: 'MGR001' },
+          },
+          reject: {
+            target: 'takeoff',
+            method: 'PATCH',
+            path: `${routes.takeOff.requests}/REQ001/reject`,
+            body: { reason: 'Policy conflict' },
+          },
+          sync: {
+            target: 'takeoff',
+            method: 'POST',
+            path: routes.takeOff.sync,
+            body: {
+              employees: [
+                { employeeId: 'EMP001', locationId: 'NYC', leaveType: 'PTO' },
+                { employeeId: 'EMP002', locationId: 'SF', leaveType: 'SICK_LEAVE' },
+              ],
+            },
+          },
+        };
+
+        const template = templates[name];
+        if (!template) return;
+
+        if (template.body !== undefined) {
+          const targetPath = targetField(template.target, template.path);
+          if (name === 'create') el('createBody').value = pretty(template.body);
+          if (name === 'approve') {
+            el('requestId').value = 'REQ001';
+            el('actorId').value = 'MGR001';
+          }
+          if (name === 'reject') {
+            el('requestId').value = 'REQ001';
+            el('rejectReason').value = 'Policy conflict';
+          }
+          if (name === 'sync') el('syncBody').value = pretty(template.body);
+          el('customTarget').value = template.target;
+          el('customMethod').value = template.method;
+          el('customPath').value = targetPath;
+          el('customHeaders').value = template.method === 'GET' ? '{}' : pretty({ 'Content-Type': 'application/json' });
+          el('customBody').value = pretty(template.body);
+        }
+
+        addEntry('ok', 'Template loaded', `${name} template prepared in the editors.`);
+      }
+
+      function targetField(target, path) {
+        if (target === 'mock') return path.replace(/^\/hcm/, '');
+        return path.replace(/^\/api\/v1\/api\/v1/, '/api/v1/api/v1');
+      }
+
+      async function customSend() {
+        const target = el('customTarget').value;
+        const method = el('customMethod').value;
+        const path = el('customPath').value.trim();
+        const headersText = el('customHeaders').value.trim();
+        const bodyText = el('customBody').value.trim();
+        const headers = headersText ? JSON.parse(headersText) : {};
+        const body = bodyText ? JSON.parse(bodyText) : undefined;
+        return sendRequest({ target, method, path, headers, body });
+      }
+
+      async function refreshStatus() {
+        saveSettings();
+        const results = await Promise.allSettled([runTakeOffHealth(), runMockHealth(), loadMockState()]);
+        const failed = results.filter((r) => r.status === 'rejected').length;
+        if (failed === 0) {
+          addEntry('ok', 'Status refreshed', 'Both services responded successfully.');
+        } else {
+          addEntry('err', 'Status refresh partial', `${failed} check(s) failed. See the console for details.`);
+        }
+      }
+
+      async function loadMockState() {
+        try {
+          const result = await sendRequest({ target: 'mock', method: 'GET', path: routes.mock.state });
+          const response = result.response.body || {};
+          if (response.currentBehavior) {
+            el('behaviorSelect').value = response.currentBehavior;
+            el('behaviorBadge').textContent = response.currentBehavior;
+            el('behaviorSummary').textContent = `Mock server is currently set to ${response.currentBehavior}. Failure count: ${response.failureCount ?? 0}.`;
+          }
+          return result;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function loadInitialData() {
+        loadSettings();
+        updateMetrics();
+        await Promise.allSettled([runTakeOffHealth(), loadMockState(), runMockHealth()]);
+        addEntry('ok', 'Ready', 'Control room loaded and waiting for actions.');
+      }
+
+      document.querySelectorAll('[data-action]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const action = button.getAttribute('data-action');
+          if (!action) return;
+          try {
+            if (action.startsWith('mock-')) {
+              await mockAction(action);
+            } else {
+              await takeOffAction(action);
+            }
+          } catch (_) {
+            // Error already rendered by sendRequest.
+          }
+        });
+      });
+
+      document.querySelectorAll('[data-template]').forEach((button) => {
+        button.addEventListener('click', () => fillTemplate(button.getAttribute('data-template')));
+      });
+
+      el('saveSettings').addEventListener('click', async () => {
+        saveSettings();
+        addEntry('ok', 'Settings saved', 'Base URLs updated in localStorage.');
+        await refreshStatus();
+      });
+
+      el('checkAll').addEventListener('click', refreshStatus);
+      el('clearOutput').addEventListener('click', () => {
+        el('timeline').innerHTML = '';
+        el('responsePanel').textContent = 'Console cleared.';
+        addEntry('ok', 'Console cleared', 'Previous entries removed.');
+      });
+      el('copyOutput').addEventListener('click', async () => {
+        const text = state.lastResponse || 'No response captured yet.';
+        await navigator.clipboard.writeText(text);
+        addEntry('ok', 'Copied', 'Latest response copied to clipboard.');
+      });
+
+      el('prefillHealth').addEventListener('click', () => {
+        el('customTarget').value = 'takeoff';
+        el('customMethod').value = 'GET';
+        el('customPath').value = routes.takeOff.health;
+        el('customHeaders').value = '{}';
+        el('customBody').value = '';
+        addEntry('ok', 'Prefilled', 'Take-Off health request inserted into the custom console.');
+      });
+
+      el('prefillMockState').addEventListener('click', () => {
+        el('customTarget').value = 'mock';
+        el('customMethod').value = 'GET';
+        el('customPath').value = routes.mock.state;
+        el('customHeaders').value = '{}';
+        el('customBody').value = '';
+        addEntry('ok', 'Prefilled', 'Mock state request inserted into the custom console.');
+      });
+
+      el('customRun').addEventListener('click', async () => {
+        try {
+          await customSend();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Invalid JSON provided';
+          addEntry('err', 'Custom request failed', message);
+        }
+      });
+
+      updateMetrics();
+      loadInitialData();
+    </script>
+  </body>
+</html>
