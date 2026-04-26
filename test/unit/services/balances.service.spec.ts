@@ -3,6 +3,7 @@ import { BalancesService } from 'src/modules/balances/balances.service';
 import { BalanceCacheService } from 'src/modules/balances/balance-cache.service';
 import { BalancesRepository } from 'src/repositories/balances.repository';
 import { Balance } from 'src/entities/balance.entity';
+import { HCMClient } from 'src/modules/hcm-integration/hcm-client';
 import {
   InsufficientBalanceException,
   DimensionValidationException,
@@ -58,6 +59,7 @@ describe('BalancesService', () => {
         BalancesService,
         { provide: BalancesRepository, useValue: mockRepository },
         { provide: BalanceCacheService, useValue: mockCache },
+        { provide: HCMClient, useValue: { getBalance: jest.fn() } },
       ],
     }).compile();
 

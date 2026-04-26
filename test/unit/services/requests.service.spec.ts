@@ -55,6 +55,7 @@ describe('TimeOffRequestService', () => {
     rejection_reason: null,
     hcm_sync_status: 'PENDING',
     hcm_request_id: null,
+    version: 1,
     created_at: new Date(),
     updated_at: new Date(),
   };

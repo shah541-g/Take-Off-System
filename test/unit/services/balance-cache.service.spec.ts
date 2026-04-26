@@ -1,3 +1,4 @@
+import { Test, TestingModule } from '@nestjs/testing';
 import { BalanceCacheService } from 'src/modules/balances/balance-cache.service';
 import { Balance } from 'src/entities/balance.entity';
 
@@ -21,8 +22,12 @@ describe('BalanceCacheService', () => {
     updated_at: new Date(),
   };
 
-  beforeEach(() => {
-    service = new BalanceCacheService();
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [BalanceCacheService],
+    }).compile();
+
+    service = module.get<BalanceCacheService>(BalanceCacheService);
   });
 
   describe('getCacheKey', () => {
